@@ -18,6 +18,15 @@
          ("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch-popup)))
 
+;; Github integration for Magit.
+(use-package magithub
+  :defer-install t
+  :after magit
+  :config
+
+  ;; The following configuration is recommended in the README [1].
+  (magithub-feature-autoinject t))
+
 ;; Allows editing Git commit messages from the command line (i.e. with
 ;; emacs or emacsclient as your core.editor).
 (use-package git-commit
