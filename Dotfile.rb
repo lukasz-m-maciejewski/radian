@@ -13,9 +13,10 @@ target 'zsh' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'zsh'
-    elsif OS::arch?
+    end
+    with_os :arch_linux do
       pacman 'zsh'
     end
   end
@@ -28,21 +29,25 @@ target 'zsh' do
     depends_on 'exa' => :optional
   end
 
-  subtask 'secure-compinit-directories' do
+  target 'secure-compinit-directories' do
     desc 'Make zsh stop complaining about permissions on compinit files.'
+
     check do
       puts 'TODO: implement this'
     end
+
     install do
       puts 'TODO: implement this'
     end
   end
 
-  subtask 'set-login-shell' do
+  target 'set-login-shell' do
     desc 'Set zsh as the login shell.'
+
     check do
       puts 'TODO: implement this'
     end
+
     install do
       puts 'TODO: implement this'
     end
@@ -52,7 +57,7 @@ end
 ################################################################################
 #### Tmux
 
-if OS::macos?
+with_os :macos do
   target 'reattach-to-user-namespace' do
     desc 'Wrapper program to fix clipboard access in Tmux on macOS.'
     homepage 'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
@@ -80,13 +85,14 @@ target 'tmux' do
   min_version '2.2'
 
   check do
-    binary 'tmux', version: '-V'
+    binary 'tmux', subcommand: '-V'
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'tmux'
-    elsif OS::arch?
+    end
+    with_os :arch_linux do
       pacman 'tmux'
     end
   end
@@ -95,7 +101,9 @@ target 'tmux' do
     symlink ".tmux.conf"
     template "templates/.tmux.local.conf"
     symlink "#{local}/.tmux.local.conf"
-    depends_on 'reattach-to-user-namespace' if OS::macos?
+    with_os :macos do
+      depends_on 'reattach-to-user-namespace'
+    end
   end
 
   hints <<-EOS.undent
@@ -118,9 +126,10 @@ target 'git' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'git'
-    elsif OS::arch?
+    end
+    with_os :arch_linux do
       pacman 'git'
     end
   end
@@ -149,17 +158,20 @@ target 'emacs' do
   end
 
   install do
-    if OS::macos?
-      if option? 'windowed'
+    with_os :macos do
+      with_option 'windowed' do
         cask 'emacs'
-        symlink 'scripts/emacs' => '/usr/local/bin/emacs'
-      else
+        symlink 'scripts/emacs' => 'usr/local/bin/emacs'
+      end
+      without_option 'windowed' do
         brew 'emacs'
       end
-    elsif OS::arch?
-      if option? 'windowed'
+    end
+    with_os :arch_linux do
+      with_option 'windowed' do
         pacman 'emacs'
-      else
+      end
+      without_option 'windowed' do
         pacman 'emacs-nox'
       end
     end
@@ -212,9 +224,10 @@ target 'vim' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'neovim/neovim' => 'neovim'
-    elsif OS::arch?
+    end
+    with_os :arch_linux do
       pacman 'neovim'
     end
   end
@@ -238,14 +251,15 @@ target 'java' do
 
   check do
     command '/usr/libexec/java_home'
-    binary 'javac', version: '-version'
-    binary 'java', version: '-version'
+    binary 'javac', subcommand: '-version'
+    binary 'java', subcommand: '-version'
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       cask 'java'
-    elsif OS::arch?
+    end
+    with_os :arch_linux do
       pacman 'jdk8-openjdk'
     end
   end
@@ -269,7 +283,7 @@ target 'cmake' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'cmake'
     end
   end
@@ -285,7 +299,7 @@ target 'libclang' do
   min_version '3.9'
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'llvm'
     end
   end
@@ -306,9 +320,10 @@ target 'leiningen' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'leiningen'
-    elsif OS::arch?
+    end
+    with_os :arch_linux do
       yaourt 'leiningen'
     end
   end
@@ -336,7 +351,7 @@ target 'racket' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       cask 'racket'
     end
   end
@@ -355,20 +370,20 @@ target 'ag' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'the_silver_searcher'
     end
   end
 end
 
-if OS::macos?
+with_os :macos do
   target 'coreutils' do
     desc 'Basic shell utilities of the GNU operating system.'
     homepage 'https://www.gnu.org/software/coreutils/coreutils.html'
     min_version '8.27'
 
     install do
-      if OS::macos?
+      with_os :macos do
         brew 'coreutils'
       end
     end
@@ -385,7 +400,7 @@ target 'exa' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'exa'
     end
   end
@@ -401,7 +416,7 @@ target 'fasd' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'raxod502/radian' => 'fasd'
     end
   end
@@ -413,11 +428,11 @@ target 'hub' do
   min_version '2.3'
 
   check do
-    binary 'hub', prefix: /git version .+/
+    binary 'hub', skip_prefix: /git version .+/
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'hub', flags: ['devel']
     end
   end
@@ -433,7 +448,7 @@ target 'wget' do
   end
 
   install do
-    if OS::macos?
+    with_os :macos do
       brew 'wget'
     end
   end
