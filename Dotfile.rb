@@ -33,11 +33,12 @@ target 'zsh' do
     desc 'Make zsh stop complaining about permissions on compinit files.'
 
     check do
-      puts 'TODO: implement this'
+      script 'scripts/check-compinit-security.zsh'
     end
 
     install do
-      puts 'TODO: implement this'
+      script 'scripts/check-compinit-security.zsh' =>
+             'scripts/fix-compinit-security.zsh'
     end
   end
 
@@ -45,11 +46,12 @@ target 'zsh' do
     desc 'Set zsh as the login shell.'
 
     check do
-      puts 'TODO: implement this'
+      script 'scripts/check-login-shell.zsh'
     end
 
     install do
-      puts 'TODO: implement this'
+      script 'scripts/check-login-shell.zsh' =>
+             'scripts/set-login-shell.zsh'
     end
   end
 end
