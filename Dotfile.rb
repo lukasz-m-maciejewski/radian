@@ -227,7 +227,7 @@ target 'vim' do
 
   install do
     with_os :macos do
-      brew 'neovim/neovim' => 'neovim'
+      brew 'neovim', tap: 'neovim/neovim'
     end
     with_os :arch_linux do
       pacman 'neovim'
@@ -419,7 +419,7 @@ target 'fasd' do
 
   install do
     with_os :macos do
-      brew 'raxod502/radian' => 'fasd'
+      brew 'fasd', tap: 'raxod502/radian'
     end
   end
 end
