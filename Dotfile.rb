@@ -190,7 +190,7 @@ target 'emacs' do
     symlink "radian-emacs" => "#{home}/.emacs.d/radian"
     symlink "versions.el" =>
             "#{home}/.emacs.d/straight/versions/radian.el"
-    touch "#{local}/versions.el"
+    touch "versions.el"
     symlink "#{local}/versions.el" =>
             "#{home}/.emacs.d/straight/versions/radian-local.el"
     depends_on 'leiningen' => :optional
