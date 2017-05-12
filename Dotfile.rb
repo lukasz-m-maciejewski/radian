@@ -316,7 +316,7 @@ target 'leiningen' do
   min_version '2.7.1'
 
   check do
-    without '#{home}/.lein/profiles.clj' do
+    temporarily_moving '#{home}/.lein/profiles.clj' do
       binary 'lein'
     end
   end
