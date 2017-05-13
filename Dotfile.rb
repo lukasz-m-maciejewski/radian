@@ -8,7 +8,7 @@ target 'zsh' do
   homepage 'http://www.zsh.org/'
   min_version '5.2'
 
-  check do
+  test do
     binary 'zsh'
   end
 
@@ -29,29 +29,21 @@ target 'zsh' do
     depends_on 'exa' => :optional
   end
 
-  target 'secure-compinit-directories' do
+  task 'secure-compinit-directories' do
     desc 'Make zsh stop complaining about permissions on compinit files.'
 
-    check do
-      script 'scripts/check-compinit-security.zsh'
-    end
-
-    install do
-      script 'scripts/check-compinit-security.zsh' =>
-             'scripts/fix-compinit-security.zsh'
+    run do
+      script :check => 'scripts/zsh/compinit-security/check.zsh',
+             :run => 'scripts/zsh/compinit-security/run.zsh'
     end
   end
 
-  target 'set-login-shell' do
+  task 'set-login-shell' do
     desc 'Set zsh as the login shell.'
 
-    check do
-      script 'scripts/check-login-shell.zsh'
-    end
-
     install do
-      script 'scripts/check-login-shell.zsh' =>
-             'scripts/set-login-shell.zsh'
+      script :check => 'scripts/zsh/login-shell/check.zsh',
+             :run => 'scripts/zsh/login-shell/run.zsh'
     end
   end
 end
@@ -65,7 +57,7 @@ with_os :macos do
     homepage 'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
     min_version '2.4'
 
-    check do
+    test do
       binary 'reattach-to-user-namespace'
     end
 
@@ -86,7 +78,7 @@ target 'tmux' do
   homepage 'https://tmux.github.io/'
   min_version '2.2'
 
-  check do
+  test do
     binary 'tmux', subcommand: '-V'
   end
 
@@ -123,7 +115,7 @@ target 'git' do
   homepage 'https://git-scm.com/'
   min_version '2.12.2'
 
-  check do
+  test do
     binary 'git'
   end
 
@@ -154,7 +146,7 @@ target 'emacs' do
 
   option 'windowed'
 
-  check do
+  test do
     binary 'emacs'
     binary 'emacsclient'
   end
@@ -163,7 +155,7 @@ target 'emacs' do
     with_os :macos do
       with_option 'windowed' do
         cask 'emacs'
-        symlink 'scripts/emacs' => 'usr/local/bin/emacs'
+        symlink 'scripts/emacs/emacs' => 'usr/local/bin/emacs'
       end
       without_option 'windowed' do
         brew 'emacs'
@@ -221,7 +213,7 @@ target 'vim' do
   homepage 'https://vim.sourceforge.io/'
   min_version '0.1.6'
 
-  check do
+  test do
     binary 'nvim'
   end
 
@@ -251,7 +243,7 @@ target 'java' do
   homepage 'https://www.java.com/'
   min_version '1.6'
 
-  check do
+  test do
     command '/usr/libexec/java_home'
     binary 'javac', subcommand: '-version'
     binary 'java', subcommand: '-version'
@@ -280,7 +272,7 @@ target 'cmake' do
   homepage 'https://cmake.org/'
   min_version '3.7'
 
-  check do
+  test do
     binary 'cmake'
   end
 
@@ -315,7 +307,7 @@ target 'leiningen' do
   homepage 'https://leiningen.org/'
   min_version '2.7.1'
 
-  check do
+  test do
     temporarily_moving '#{home}/.lein/profiles.clj' do
       binary 'lein'
     end
@@ -348,7 +340,7 @@ target 'racket' do
   homepage 'https://racket-lang.org/'
   min_version '6.6'
 
-  check do
+  test do
     binary 'racket'
   end
 
@@ -367,7 +359,7 @@ target 'ag' do
   homepage 'https://github.com/ggreer/the_silver_searcher'
   min_version '0.33'
 
-  check do
+  test do
     binary 'ag'
   end
 
@@ -397,7 +389,7 @@ target 'exa' do
   homepage 'https://the.exa.website/'
   min_version '0.4.0'
 
-  check do
+  test do
     binary 'exa', returns_nonzero: true
   end
 
@@ -413,7 +405,7 @@ target 'fasd' do
   homepage 'https://github.com/raxod502/fasd'
   min_version '1.0.2'
 
-  check do
+  test do
     binary 'fasd'
   end
 
@@ -429,7 +421,7 @@ target 'hub' do
   homepage 'https://hub.github.com/'
   min_version '2.3'
 
-  check do
+  test do
     binary 'hub', skip_prefix: /git version .+/
   end
 
@@ -445,7 +437,7 @@ target 'wget' do
   homepage 'https://www.gnu.org/software/wget/'
   min_version '1.18'
 
-  check do
+  test do
     binary 'wget'
   end
 
