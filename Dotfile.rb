@@ -41,7 +41,7 @@ target 'zsh' do
   task 'set-login-shell' do
     desc 'Set zsh as the login shell.'
 
-    install do
+    run do
       script :check => 'scripts/zsh/login-shell/check.zsh',
              :run => 'scripts/zsh/login-shell/run.zsh'
     end
