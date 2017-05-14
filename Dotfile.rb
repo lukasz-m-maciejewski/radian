@@ -244,7 +244,7 @@ target 'java' do
   min_version '1.6'
 
   test do
-    command '/usr/libexec/java_home'
+    command '/usr/libexec/java_home', '--failfast'
     binary 'javac', subcommand: '-version'
     binary 'java', subcommand: '-version'
   end
