@@ -59,17 +59,15 @@ with_os :macos do
 
     test do
       binary 'reattach-to-user-namespace'
+      hints <<~EOS
+        The 'reattach-to-user-namespace' binary has been installed. It
+        will be used automatically by Radian's Tmux configuration.
+      EOS
     end
 
     install do
       brew 'reattach-to-user-namespace'
     end
-
-    hints <<-EOS.undent
-      The 'reattach-to-user-namespace' binary has been installed to
-      /usr/local/bin. It will be used automatically by Radian's Tmux
-      configuration.
-    EOS
   end
 end
 
@@ -89,6 +87,11 @@ target 'tmux' do
     with_os :arch_linux do
       pacman 'tmux'
     end
+    hints <<~EOS
+      The 'tmux' binary has been installed to /usr/local/bin. You can
+      start a Tmux session by running 'tmux new-session -s <name>', or
+      attach to an existing session with 'tmux attach'.
+    EOS
   end
 
   configure do
@@ -99,12 +102,6 @@ target 'tmux' do
       depends_on 'reattach-to-user-namespace'
     end
   end
-
-  hints <<-EOS.undent
-    The 'tmux' binary has been installed to /usr/local/bin. You can
-    start a Tmux session by running 'tmux new-session -s <name>', or
-    attach to an existing session with 'tmux attach'.
-  EOS
 end
 
 ################################################################################
@@ -169,6 +166,16 @@ target 'emacs' do
         pacman 'emacs-nox'
       end
     end
+    hints <<~EOS
+      You can start Emacs by opening 'Emacs.app' from the Applications
+      folder or by running the 'emacs' binary in /usr/local/bin. To run
+      Emacs in the terminal, use 'emacs -nw'.
+
+      You can use the Emacs client via the 'emacsclient' binary. Provide
+      the '-nw' option to run in the terminal, and use
+      '--alternate-editor=' to cause emacsclient to launch an Emacs
+      server if one does not yet exist.
+    EOS
   end
 
   configure do
@@ -192,17 +199,6 @@ target 'emacs' do
     depends_on 'ag' => :optional
     depends_on 'racket' => :optional
   end
-
-  hints <<-EOS.undent
-    You can start Emacs by opening 'Emacs.app' from the Applications
-    folder or by running the 'emacs' binary in /usr/local/bin. To run
-    Emacs in the terminal, use 'emacs -nw'.
-
-    You can use the Emacs client via the 'emacsclient' binary. Provide
-    the '-nw' option to run in the terminal, and use
-    '--alternate-editor=' to cause emacsclient to launch an Emacs
-    server if one does not yet exist.
-  EOS
 end
 
 ################################################################################
@@ -224,15 +220,14 @@ target 'vim' do
     with_os :arch_linux do
       pacman 'neovim'
     end
+    hints <<~EOS
+      You can start Vim by running the 'nvim' binary in /usr/local/bin.
+    EOS
   end
 
   configure do
     symlink 'init.vim' => '#{home}/.config/nvim/init.vim'
   end
-
-  hints <<-EOS.undent
-    You can start Vim by running the 'nvim' binary in /usr/local/bin.
-  EOS
 end
 
 ################################################################################
@@ -256,12 +251,11 @@ target 'java' do
     with_os :arch_linux do
       pacman 'jdk8-openjdk'
     end
+    hints <<~EOS
+      You can compile, run, and package Java programs using the 'javac',
+      'java', and 'jar' binaries installed in /usr/bin.
+    EOS
   end
-
-  hints <<-EOS.undent
-    You can compile, run, and package Java programs using the 'javac',
-    'java', and 'jar' binaries installed in /usr/bin.
-  EOS
 end
 
 ################################################################################
@@ -280,11 +274,10 @@ target 'cmake' do
     with_os :macos do
       brew 'cmake'
     end
+    hints <<~EOS
+      CMake has been installed as 'cmake' in /usr/local/bin.
+    EOS
   end
-
-  hints <<-EOS.undent
-    CMake has been installed as 'cmake' in /usr/local/bin.
-  EOS
 end
 
 target 'libclang' do
@@ -320,16 +313,15 @@ target 'leiningen' do
     with_os :arch_linux do
       yaourt 'leiningen'
     end
+    hints <<~EOS
+      You can use Leiningen via the 'lein' binary. To start a REPL,
+      run 'lein repl'.
+    EOS
   end
 
   configure do
     symlink "profiles.clj" => "#{home}/.lein/profiles.clj"
   end
-
-  hints <<-EOS.undent
-    You can use Leiningen via the 'lein' binary installed in
-    /usr/local/bin. To start a REPL, run 'lein repl'.
-  EOS
 end
 
 ################################################################################
