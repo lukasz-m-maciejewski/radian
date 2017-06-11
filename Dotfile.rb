@@ -35,6 +35,7 @@ target 'zsh' do
     run do
       script :check => 'scripts/zsh/compinit-security/check.zsh',
              :run => 'scripts/zsh/compinit-security/run.zsh'
+      depends_on 'zsh'
     end
   end
 
@@ -44,6 +45,7 @@ target 'zsh' do
     run do
       script :check => 'scripts/zsh/login-shell/check.zsh',
              :run => 'scripts/zsh/login-shell/run.zsh'
+      depends_on 'zsh'
     end
   end
 end
