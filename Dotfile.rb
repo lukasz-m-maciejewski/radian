@@ -61,14 +61,14 @@ with_os :macos do
 
     test do
       binary 'reattach-to-user-namespace'
-      hints <<~EOS
-        The 'reattach-to-user-namespace' binary has been installed. It
-        will be used automatically by Radian's Tmux configuration.
-      EOS
     end
 
     install do
       brew 'reattach-to-user-namespace'
+      hints <<~EOS
+        The 'reattach-to-user-namespace' binary has been installed. It
+        will be used automatically by Radian's Tmux configuration.
+      EOS
     end
   end
 end
@@ -241,7 +241,7 @@ target 'java' do
   min_version '1.6'
 
   test do
-    command '/usr/libexec/java_home', '--failfast'
+    script ['/usr/libexec/java_home', '--failfast']
     binary 'javac', subcommand: '-version'
     binary 'java', subcommand: '-version'
   end
