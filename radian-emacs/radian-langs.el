@@ -182,6 +182,13 @@
   ;; Lazy-load json-mode. This requires some gymnastics. It concerns
   ;; me somewhat that this kind of stuff now seems routine to me.
 
+  (defun radian--enable-json-mode-patches ()
+    "Enable patches for `json-mode'."
+    (require 'json-mode))
+
+  (add-hook 'el-patch-pre-validate-hook
+            #'radian--enable-json-mode-patches)
+
   (el-patch-defconst json-mode-standard-file-ext '(".json" ".jsonld")
     "List of JSON file extensions.")
 
@@ -347,6 +354,14 @@ This function calls `json-mode--update-auto-mode' to change the
   ;; `ruby-electric-mode', which gets whatever value
   ;; `ruby-electric-mode-map' happens to have at definition time. (The
   ;; alternative is to also patch `ruby-electric-mode-map'.)
+
+  (defun radian--enable-ruby-electric-patches ()
+    "Load patches for `ruby-electric'."
+    (require 'ruby-electric))
+
+  (add-hook 'el-patch-pre-validate-hook
+            #'radian--enable-ruby-electric-patches)
+
   (el-patch-defvar ruby-electric-mode-map
     (let ((map (make-sparse-keymap)))
       (define-key map " " 'ruby-electric-space/return)
@@ -547,7 +562,11 @@ command `sh-reset-indent-vars-to-global-values'."
 ;; [1]: https://github.com/jwiegley/use-package/issues/379#issuecomment-258217014
 
 (use-package tex-site
-  :recipe (auctex :fetcher github
+  ;; This recipe can be removed once straight.el supports org-elpa
+  ;; [1].
+  ;;
+  ;; [1]: https://github.com/raxod502/straight.el/issues/36
+  :recipe (auctex :host github
                   :repo "emacsmirror/auctex"
                   :files (:defaults (:exclude "*.el.in")))
   :demand t)
