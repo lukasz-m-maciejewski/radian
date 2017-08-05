@@ -44,8 +44,7 @@
          ("RET" . newline-and-indent))
   :config
 
-  ;; Enable Paredit and Aggressive Indent in Clojure mode.
-  (add-hook 'clojure-mode-hook #'paredit-mode)
+  ;; Enable Aggressive Indent in Clojure mode.
   (add-hook 'clojure-mode-hook #'aggressive-indent-mode)
 
   ;;; Customize indentation like this:
@@ -175,13 +174,7 @@ Return nil if not inside a project."
 
   ;; We define some patches after CIDER is loaded. We need to make
   ;; sure el-patch knows how to find these patches.
-
-  (defun radian--enable-cider-patches ()
-    (use-package-install-deferred-package 'cider :el-patch)
-    (require 'cider))
-
-  (add-hook 'el-patch-pre-validate-hook
-            #'radian--enable-cider-patches)
+  (el-patch-feature cider)
 
   :bind (;; Allow usage of the C-c M-j and C-c M-J shortcuts everywhere.
          ("C-c M-j" . cider-jack-in)
@@ -191,8 +184,7 @@ Return nil if not inside a project."
   ;; Enable ElDoc in Clojure files when CIDER is running.
   (add-hook 'cider-mode-hook #'eldoc-mode)
 
-  ;; Enable Paredit and ElDoc in the CIDER REPL.
-  (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  ;; Enable ElDoc in the CIDER REPL.
   (add-hook 'cider-repl-mode-hook #'eldoc-mode)
 
   ;; By default, any error messages that occur when CIDER is starting
@@ -331,11 +323,16 @@ should be the regular Clojure REPL started by the server process filter."
            "ns" ,(cider-current-ns)
            "code" ,cljs-repl-form)
          (cider-repl-handler (current-buffer)))
-        (cider--offer-to-open-app-in-browser nrepl-server-buffer)))))
+        (when cider-offer-to-open-cljs-app-in-browser
+          (cider--offer-to-open-app-in-browser nrepl-server-buffer))))))
 
 ;; Makes Emacs into a real Clojure IDE by providing a mountain of
 ;; automated refactoring tools.
 (use-package clj-refactor
+  ;; Waiting on https://github.com/clojure-emacs/clj-refactor.el/pull/385
+  :recipe (:host github :repo "raxod502/clj-refactor.el"
+           :upstream (:host github :repo "clojure-emacs/clj-refactor.el")
+           :files (:defaults "CHANGELOG.md"))
   :defer-install t
   :init
 
@@ -412,6 +409,9 @@ This is an `:override' advice for `cljr--post-command-message'.")
 
   (advice-add #'cljr--post-command-message :override
               #'radian--advice-cljr-message-eagerly)
+
+  ;; Automatically sort project dependencies after changing them.
+  (setq cljr-auto-sort-project-dependencies t)
 
   :diminish clj-refactor-mode)
 

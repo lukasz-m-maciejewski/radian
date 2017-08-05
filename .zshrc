@@ -146,6 +146,15 @@ setopt rc_quotes
 # freeze and unfreeze command output, respectively).
 unsetopt flow_control
 
+# Make bracketed paste slightly smarter. This causes url-quote-magic
+# below to work correctly.
+autoload -Uz bracketed-paste-magic
+zle -N bracketed-paste bracketed-paste-magic
+
+# Automatically escape URLs.
+autoload -Uz url-quote-magic
+zle -N self-insert url-quote-magic
+
 ################################################################################
 #### Completion
 
@@ -179,6 +188,9 @@ setopt glob_dots
 
 # Sort numeric filenames numerically, instead of lexicographically.
 setopt numeric_glob_sort
+
+# Disable history expansion, so we can use ! in our commands.
+setopt no_bang_hist
 
 ################################################################################
 #### Command history
@@ -613,6 +625,96 @@ if (( $+commands[git] )); then
             return 1
         fi
     }
+    function glG {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGs {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --stat ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGp {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --patch ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGps {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --patch --stat ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGo {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --oneline ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGa {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --all ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGsa {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --all --stat ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGpa {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --all --patch ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGpsa {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --all --patch --stat ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
+    function glGoa {
+        emulate -LR zsh
+        if (( $# >= 1 )); then
+            git log -G $1 --graph --decorate --all --oneline ${@:2}
+        else
+            echo "No query provided."
+            return 1
+        fi
+    }
 
     alias ga='git add'
     alias gap='git add --patch'
@@ -681,6 +783,10 @@ if (( $+commands[git] )); then
     alias gcop='git checkout --patch'
     alias gcob='git checkout -B'
 
+    alias glsf='git ls-files'
+
+    alias gx='git clean'
+
     alias gbs='git bisect'
     alias gbss='git bisect start'
     alias gbsg='git bisect good'
@@ -719,6 +825,7 @@ if (( $+commands[git] )); then
     alias gum='git pull --no-rebase'
 
     alias gp='git push'
+    alias gpa='git push --all'
     alias gpf='git push --force-with-lease'
     alias gpff='git push --force'
     alias gpu='git push --set-upstream'
@@ -763,7 +870,9 @@ fi
 
 if (( $+commands[emacs] )); then
     alias e='emacs -nw'
+    alias eq='emacs -nw -Q'
     alias ew='emacs'
+    alias eqw='emacs -Q'
 fi
 
 if (( $+commands[emacsclient] )); then

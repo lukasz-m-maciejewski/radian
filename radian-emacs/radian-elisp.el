@@ -1,17 +1,16 @@
 ;;; radian-elisp.el --- Support for Emacs Lisp
 
 (require 'radian-bind-key)
+(require 'radian-check)
 (require 'radian-custom)
 (require 'radian-eldoc)
 (require 'radian-indent)
 (require 'radian-lisp)
+(require 'radian-package)
 (require 'radian-patch)
 
 ;; Enable ElDoc for Elisp buffers and the *scratch* buffer.
 (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
-
-;; Enable Paredit for Elisp buffers and the *scratch* buffer.
-(add-hook 'emacs-lisp-mode-hook #'paredit-mode)
 
 ;; Enable Aggressive Indent for Elisp buffers and the *scratch*
 ;; buffer.
@@ -130,10 +129,11 @@ Nil means no keybinding is established."
 (defun radian-reload-init ()
   "Reload init.el."
   (interactive)
-  (message "Reloading init.el...")
-  (if (load user-init-file 'noerror 'nomessage)
-      (message "Reloading init.el... done.")
-    (message "Reloading init.el... error.")))
+  (straight-transaction
+    (straight-mark-transaction-as-init)
+    (message "Reloading init.el...")
+    (load user-init-file nil 'nomessage)
+    (message "Reloading init.el... done.")))
 
 (bind-key radian-reload-init-keybinding #'radian-reload-init)
 
@@ -145,7 +145,12 @@ Nil means no keybinding is established."
   "Evaluate the current buffer as Elisp code."
   (interactive)
   (message "Evaluating %s..." (buffer-name))
-  (eval-buffer)
+  (straight-transaction
+    (if (null buffer-file-name)
+        (eval-buffer)
+      (when (string= buffer-file-name user-init-file)
+        (straight-mark-transaction-as-init))
+      (load-file buffer-file-name)))
   (message "Evaluating %s... done." (buffer-name)))
 
 (bind-key "C-c C-k" #'radian-eval-buffer emacs-lisp-mode-map)
@@ -179,6 +184,15 @@ Nil means no keybinding is established."
 
 (add-hook 'lisp-interaction-mode-hook
           #'radian--rename-lisp-interaction-mode)
+
+;; Disable the checkdoc Flycheck checker for Emacs Lisp, as it appears
+;; to not work in some situations.
+(with-eval-after-load 'flycheck
+  (defun radian--disable-flycheck-for-emacs-lisp ()
+    "Disable Flycheck checkers for Elisp."
+    (setq flycheck-disabled-checkers '(emacs-lisp emacs-lisp-checkdoc)))
+
+  (add-hook 'emacs-lisp-mode-hook #'radian--disable-flycheck-for-emacs-lisp))
 
 (provide 'radian-elisp)
 
