@@ -754,6 +754,13 @@ by `el-patch'."))
   ;; Use `prescient' for Ivy menus.
   (ivy-prescient-mode +1))
 
+;; Package `which-key' provides completions for an active key prefix.
+(use-package which-key
+  :config
+  (which-key-mode)
+  :demand t
+  :blackout t)
+
 ;;; Window management
 
 (radian-defadvice radian--advice-keyboard-quit-minibuffer-first
@@ -2310,7 +2317,23 @@ currently active.")
 
   :blackout yas-minor-mode)
 
-;;; Language support
+;;;; Language support
+;;;; General
+(use-package lsp-mode
+  :commands lsp
+  :config (require 'lsp-clients))
+
+(use-package lsp-ui
+  :config
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+(use-package company-lsp
+  ;; :config
+  ;; (push 'company-lsp company-backends)
+  :commands
+  company-lsp)
+
+
 ;;;; Text-based languages
 
 ;; Feature `text-mode' provides a major mode for editing plain text.
@@ -2333,12 +2356,6 @@ currently active.")
 
   (add-to-list 'safe-local-variable-values
                '(lisp-indent-function . common-lisp-indent-function)))
-
-;;;; AppleScript
-;; https://developer.apple.com/library/content/documentation/AppleScript/Conceptual/AppleScriptLangGuide/introduction/ASLR_intro.html
-
-;; Package `apples-mode' provides a major mode for AppleScript.
-(use-package apples-mode)
 
 ;;;; C, C++, Objective-C, Java
 ;; https://en.wikipedia.org/wiki/C_(programming_language)
@@ -2389,7 +2406,24 @@ This function is for use in `c-mode-hook' and `c++-mode-hook'."
     (radian--flycheck-disable-checkers 'c/c++-clang 'c/c++-gcc))
 
   (add-hook 'c-mode #'radian--flycheck-c/c++-setup)
-  (add-hook 'c++-mode #'radian--flycheck-c/c++-setup))
+  (add-hook 'c++-mode #'radian--flycheck-c/c++-setup)
+  (add-hook 'c-mode-common-hook
+          (lambda ()
+            "C mode customization hook."
+            (c-set-style "bsd")
+            (setq c-basic-offset 4
+                  tab-width 4
+                  indent-tabs-mode nil
+                  c-tab-always-indent t
+                  c-echo-syntactic-information-p t)
+            (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
+            (auto-revert-mode 1)
+            (toggle-truncate-lines t)))
+  (add-hook 'c++-mode-hook
+            (lambda ()
+              (add-to-list 'c-offsets-alist '(innamespace . 0))
+              (c-set-offset 'substatement-open 0)
+              (c-set-offset 'label '+))))
 
 ;; Package `irony-mode' provides a framework to use libclang to get
 ;; semantic information about C, C++, and Objective-C code. Such
@@ -2456,6 +2490,21 @@ This function is for use in `c-mode-hook' and `c++-mode-hook'."
   ;;
   ;; [1]: https://github.com/Sarcasm/flycheck-irony/issues/9
   (flycheck-add-next-checker 'irony '(warning . c/c++-cppcheck)))
+
+
+(use-package ccls
+  :hook ((c-mode c++-mode objc-mode) .
+         (lambda () (cl-pushnew #'company-lsp company-backends) (require 'ccls) (lsp))))
+
+(with-eval-after-load 'projectile
+  (projectile-register-project-type 'cpp-code '("projectile-cpp")
+                                    :configure "(mkdir -p build-debug; cd build-debug; cmake ../source -GNinja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug; cd ..; ln -s build-debug/compile_commands.json)"
+                                    :src-dir "source"
+                                    :compile "(cd build-debug; cmake --build . )"
+                                      :test "(cd build-debug; ctest .)"
+                                      :test-suffix ".test.cpp"
+                                      ))
+
 
 ;;;; Clojure
 ;; https://clojure.org/
@@ -2806,56 +2855,56 @@ ARG is passed to `hindent-mode' toggle function."
   (setq web-mode-enable-auto-closing t))
 
 ;;;; JavaScript
-;; https://developer.mozilla.org/en-US/docs/Web/JavaScript
+;; ;; https://developer.mozilla.org/en-US/docs/Web/JavaScript
 
-;; Feature `js' provides a major mode `js-mode' for JavaScript.
-(use-feature js
-  :config
+;; ;; Feature `js' provides a major mode `js-mode' for JavaScript.
+;; (use-feature js
+;;   :config
 
-  ;; Indent by two spaces by default.
-  (setq js-indent-level 2))
+;;   ;; Indent by two spaces by default.
+;;   (setq js-indent-level 2))
 
-;; Package `js2-mode' provides a better major mode for JavaScript. It
-;; builds on the major mode `js-mode' which comes with Emacs.
-(use-package js2-mode
-  ;; The `js2-mode' package does not come with `auto-mode-alist'
-  ;; autoloads.
-  :mode (("\\.js\\'" . js2-mode)
-         ("\\.jsx\\'" . js2-jsx-mode))
-  :interpreter ("node" . js2-mode)
-  :config
+;; ;; Package `js2-mode' provides a better major mode for JavaScript. It
+;; ;; builds on the major mode `js-mode' which comes with Emacs.
+;; (use-package js2-mode
+;;   ;; The `js2-mode' package does not come with `auto-mode-alist'
+;;   ;; autoloads.
+;;   :mode (("\\.js\\'" . js2-mode)
+;;          ("\\.jsx\\'" . js2-jsx-mode))
+;;   :interpreter ("node" . js2-mode)
+;;   :config
 
-  ;; Treat shebang lines (e.g. for node) correctly.
-  (setq js2-skip-preprocessor-directives t)
+;;   ;; Treat shebang lines (e.g. for node) correctly.
+;;   (setq js2-skip-preprocessor-directives t)
 
-  ;; Replace the mode lighters. By default they are Javascript-IDE and
-  ;; JSX-IDE, which are not only improperly capitalized but also
-  ;; excessively wordy.
-  :blackout ((js2-mode . "JavaScript")
-             (js2-jsx-mode . "JSX")))
+;;   ;; Replace the mode lighters. By default they are Javascript-IDE and
+;;   ;; JSX-IDE, which are not only improperly capitalized but also
+;;   ;; excessively wordy.
+;;   :blackout ((js2-mode . "JavaScript")
+;;              (js2-jsx-mode . "JSX")))
 
-;; Package `tern' provides a static code analyzer for JavaScript. This
-;; includes ElDoc and jump-to-definition out of the box.
-(use-package tern
-  :demand t
-  :after js2-mode
-  :config
+;; ;; Package `tern' provides a static code analyzer for JavaScript. This
+;; ;; includes ElDoc and jump-to-definition out of the box.
+;; (use-package tern
+;;   :demand t
+;;   :after js2-mode
+;;   :config
 
-  (add-hook 'js2-mode-hook #'tern-mode)
+;;   (add-hook 'js2-mode-hook #'tern-mode)
 
-  :blackout t)
+;;   :blackout t)
 
-;; Package `company-tern' provides a Company backend which uses Tern.
-(use-package company-tern
-  :demand t
-  :after (:all js2-mode company tern)
-  :config
+;; ;; Package `company-tern' provides a Company backend which uses Tern.
+;; (use-package company-tern
+;;   :demand t
+;;   :after (:all js2-mode company tern)
+;;   :config
 
-  (radian-defhook radian--company-tern-enable ()
-    js2-mode-hook
-    "Enable `company-tern' in the current buffer."
-    (setq-local company-backends
-                (cons 'company-tern radian--company-backends-global))))
+;;   (radian-defhook radian--company-tern-enable ()
+;;     js2-mode-hook
+;;     "Enable `company-tern' in the current buffer."
+;;     (setq-local company-backends
+;;                 (cons 'company-tern radian--company-backends-global))))
 
 ;;;; Markdown
 ;; https://daringfireball.net/projects/markdown/
@@ -2980,69 +3029,69 @@ https://github.com/flycheck/flycheck/issues/953."
       (radian--flycheck-disable-checkers 'rst))))
 
 ;;;; Ruby
-;; https://www.ruby-lang.org/
+;; ;; https://www.ruby-lang.org/
 
-;; Package `robe' provides a language server for Ruby which draws
-;; information for autocompletions and source code navigation from a
-;; live REPL in the project context. Start it with `robe-start'.
-(use-package robe
-  :init
+;; ;; Package `robe' provides a language server for Ruby which draws
+;; ;; information for autocompletions and source code navigation from a
+;; ;; live REPL in the project context. Start it with `robe-start'.
+;; (use-package robe
+;;   :init
 
-  (add-hook 'ruby-mode-hook #'robe-mode)
+;;   (add-hook 'ruby-mode-hook #'robe-mode)
 
-  :blackout t)
+;;   :blackout t)
 
-;; Package `ruby-electric' allows you to have Emacs insert a paired
-;; "end" when you type "do", and analogously for other paired
-;; keywords.
-(use-package ruby-electric
-  :init/el-patch
+;; ;; Package `ruby-electric' allows you to have Emacs insert a paired
+;; ;; "end" when you type "do", and analogously for other paired
+;; ;; keywords.
+;; (use-package ruby-electric
+;;   :init/el-patch
 
-  ;; We already have paired delimiter support from Smartparens.
-  ;; However, `ruby-electric' provides its own copy of this
-  ;; functionality, in a less optimal way. (In particular, typing a
-  ;; closing paren when your cursor is right before a closing paren
-  ;; will insert another paren rather than moving through the existing
-  ;; one.) Unfortunately, `ruby-electric-delimiters-alist' is defined
-  ;; as a constant, so we can't customize it by setting it to nil
-  ;; (actually, we can, but byte-compilation inserts the value
-  ;; literally at its use sites, so this does not take effect).
-  ;; Instead, we override the definition of `ruby-electric-mode-map'
-  ;; to make it ignore `ruby-electric-delimiters-alist'. Also note
-  ;; that we are actually doing this before `ruby-electric' is loaded.
-  ;; This is so that the modification will actually affect the
-  ;; definition of `ruby-electric-mode', which gets whatever value
-  ;; `ruby-electric-mode-map' happens to have at definition time. (The
-  ;; alternative is to also patch `ruby-electric-mode'.)
+;;   ;; We already have paired delimiter support from Smartparens.
+;;   ;; However, `ruby-electric' provides its own copy of this
+;;   ;; functionality, in a less optimal way. (In particular, typing a
+;;   ;; closing paren when your cursor is right before a closing paren
+;;   ;; will insert another paren rather than moving through the existing
+;;   ;; one.) Unfortunately, `ruby-electric-delimiters-alist' is defined
+;;   ;; as a constant, so we can't customize it by setting it to nil
+;;   ;; (actually, we can, but byte-compilation inserts the value
+;;   ;; literally at its use sites, so this does not take effect).
+;;   ;; Instead, we override the definition of `ruby-electric-mode-map'
+;;   ;; to make it ignore `ruby-electric-delimiters-alist'. Also note
+;;   ;; that we are actually doing this before `ruby-electric' is loaded.
+;;   ;; This is so that the modification will actually affect the
+;;   ;; definition of `ruby-electric-mode', which gets whatever value
+;;   ;; `ruby-electric-mode-map' happens to have at definition time. (The
+;;   ;; alternative is to also patch `ruby-electric-mode'.)
 
-  (defvar ruby-electric-mode-map
-    (let ((map (make-sparse-keymap)))
-      (define-key map " " 'ruby-electric-space/return)
-      (define-key map [remap delete-backward-char] 'ruby-electric-delete-backward-char)
-      (define-key map [remap newline] 'ruby-electric-space/return)
-      (define-key map [remap newline-and-indent] 'ruby-electric-space/return)
-      (define-key map [remap electric-newline-and-maybe-indent] 'ruby-electric-space/return)
-      (define-key map [remap reindent-then-newline-and-indent] 'ruby-electric-space/return)
-      (el-patch-remove
-        (dolist (x ruby-electric-delimiters-alist)
-          (let* ((delim   (car x))
-                 (plist   (cdr x))
-                 (name    (plist-get plist :name))
-                 (func    (plist-get plist :handler))
-                 (closing (plist-get plist :closing)))
-            (define-key map (char-to-string delim) func)
-            (if closing
-                (define-key map (char-to-string closing) 'ruby-electric-closing-char)))))
-      map)
-    (el-patch-concat
-      "Keymap used in ruby-electric-mode"
-      (el-patch-add ".\n\nThe single-character bindings have been removed.")))
+;;   (defvar ruby-electric-mode-map
+;;     (let ((map (make-sparse-keymap)))
+;;       (define-key map " " 'ruby-electric-space/return)
+;;       (define-key map [remap delete-backward-char] 'ruby-electric-delete-backward-char)
+;;       (define-key map [remap newline] 'ruby-electric-space/return)
+;;       (define-key map [remap newline-and-indent] 'ruby-electric-space/return)
+;;       (define-key map [remap electric-newline-and-maybe-indent] 'ruby-electric-space/return)
+;;       (define-key map [remap reindent-then-newline-and-indent] 'ruby-electric-space/return)
+;;       (el-patch-remove
+;;         (dolist (x ruby-electric-delimiters-alist)
+;;           (let* ((delim   (car x))
+;;                  (plist   (cdr x))
+;;                  (name    (plist-get plist :name))
+;;                  (func    (plist-get plist :handler))
+;;                  (closing (plist-get plist :closing)))
+;;             (define-key map (char-to-string delim) func)
+;;             (if closing
+;;                 (define-key map (char-to-string closing) 'ruby-electric-closing-char)))))
+;;       map)
+;;     (el-patch-concat
+;;       "Keymap used in ruby-electric-mode"
+;;       (el-patch-add ".\n\nThe single-character bindings have been removed.")))
 
-  :init
+;;   :init
 
-  (add-hook 'ruby-mode #'ruby-electric-mode)
+;;   (add-hook 'ruby-mode #'ruby-electric-mode)
 
-  :blackout t)
+;;   :blackout t)
 
 ;;;; Rust
 ;; https://www.rust-lang.org/
@@ -3192,8 +3241,8 @@ command `sh-reset-indent-vars-to-global-values'."
 ;;;; Swift
 ;; https://developer.apple.com/swift/
 
-;; Package `swift-mode' provides a major mode for Swift code.
-(use-package swift-mode)
+;; ;; Package `swift-mode' provides a major mode for Swift code.
+;; (use-package swift-mode)
 
 ;;;; TeX
 ;; https://www.tug.org/begin.html
@@ -3332,49 +3381,49 @@ This prevents them from getting in the way of buffer selection."
   (company-auctex-init))
 
 ;;;; TypeScript
-;; https://www.typescriptlang.org/
+;; ;; https://www.typescriptlang.org/
 
-;; Package `typescript-mode' provides a major mode for TypeScript.
-(use-package typescript-mode
-  :config
+;; ;; Package `typescript-mode' provides a major mode for TypeScript.
+;; (use-package typescript-mode
+;;   :config
 
-  ;; The standard TypeScript indent width is two spaces, not four.
-  (setq typescript-indent-level 2)
+;;   ;; The standard TypeScript indent width is two spaces, not four.
+;;   (setq typescript-indent-level 2)
 
-  (radian-defhook radian--flycheck-typescript-setup ()
-    typescript-mode-hook
-    "If inside node_modules, disable the `typescript-tslint' Flycheck checker.
-If we don't disable it, then it will generally just generate
-several thousand errors, disable itself, and print a warning."
-    (when (locate-dominating-file "node_modules")
-      (radian--flycheck-disable-checkers 'typescript-tslint)))
+;;   (radian-defhook radian--flycheck-typescript-setup ()
+;;     typescript-mode-hook
+;;     "If inside node_modules, disable the `typescript-tslint' Flycheck checker.
+;; If we don't disable it, then it will generally just generate
+;; several thousand errors, disable itself, and print a warning."
+;;     (when (locate-dominating-file "node_modules")
+;;       (radian--flycheck-disable-checkers 'typescript-tslint)))
 
-  ;; Fix capitalization. It's TypeScript, not typescript.
-  :blackout "TypeScript")
+;;   ;; Fix capitalization. It's TypeScript, not typescript.
+;;   :blackout "TypeScript")
 
-;; Package `tide' provides integration with the tsserver TypeScript
-;; language server in order to provide source navigation, a Company
-;; backend, and code formatting.
-(use-package tide
-  :demand t
-  :after typescript-mode
-  :config
+;; ;; Package `tide' provides integration with the tsserver TypeScript
+;; ;; language server in order to provide source navigation, a Company
+;; ;; backend, and code formatting.
+;; (use-package tide
+;;   :demand t
+;;   :after typescript-mode
+;;   :config
 
-  (add-hook 'typescript-mode-hook #'tide-setup)
+;;   (add-hook 'typescript-mode-hook #'tide-setup)
 
-  (define-minor-mode radian-tide-format-mode
-    "Minor mode to reformat buffer using tsserver on save."
-    nil nil nil
-    (if radian-tide-format-mode
-        (add-hook 'before-save-hook #'tide-format-before-save nil 'local)
-      (remove-hook 'before-save-hook #'tide-format-before-save)))
+;;   (define-minor-mode radian-tide-format-mode
+;;     "Minor mode to reformat buffer using tsserver on save."
+;;     nil nil nil
+;;     (if radian-tide-format-mode
+;;         (add-hook 'before-save-hook #'tide-format-before-save nil 'local)
+;;       (remove-hook 'before-save-hook #'tide-format-before-save)))
 
-  (add-hook 'tide-mode-hook #'radian-tide-format-mode)
+;;   (add-hook 'tide-mode-hook #'radian-tide-format-mode)
 
-  ;; Maintain standard TypeScript indent width.
-  (setq tide-format-options '(:indentSize 2 :tabSize 2))
+;;   ;; Maintain standard TypeScript indent width.
+;;   (setq tide-format-options '(:indentSize 2 :tabSize 2))
 
-  :blackout t)
+;;   :blackout t)
 
 ;;;; VimScript
 ;; http://vimdoc.sourceforge.net/htmldoc/usr_41.html
