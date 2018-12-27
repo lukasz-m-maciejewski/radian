@@ -1119,7 +1119,7 @@ Otherwise behave as if called interactively.
   ;; Defining the prefix key must be done manually as per
   ;; documentation for recent versions of Projectile, see
   ;; https://projectile.readthedocs.io/en/latest/installation/.
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c C-p") 'projectile-command-map)
 
   (projectile-mode +1)
 
@@ -2347,6 +2347,9 @@ currently active.")
     "Disable some Flycheck checkers for plain text."
     (radian--flycheck-disable-checkers 'proselint)))
 
+;;;; Ledger files
+(use-package ledger-mode)
+
 ;;;; Lisp languages
 
 ;; Feature `lisp-mode' provides a base major mode for Lisp languages,
@@ -2505,6 +2508,7 @@ This function is for use in `c-mode-hook' and `c++-mode-hook'."
                                       :test-suffix ".test.cpp"
                                       ))
 
+(use-package cmake-mode)
 
 ;;;; Clojure
 ;; https://clojure.org/
